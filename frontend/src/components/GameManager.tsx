@@ -1,14 +1,19 @@
 import React, { useState } from 'react';
 import StartMenu from './screens/StartMenu';
 import LoadingScreen from './screens/LoadingScreen';
+import MultiplayerLobby from './screens/MultiplayerLobby';
 import GameScene3D from './3d/GameScene3D';
 
-type GameScreen = 'START_MENU' | 'LOADING' | 'FIGHTER_SELECTION' | 'COMBAT' | 'END_GAME' | 'SETTINGS';
+type GameScreen = 'START_MENU' | 'LOADING' | 'MULTIPLAYER_LOBBY' | 'FIGHTER_SELECTION' | 'COMBAT' | 'END_GAME' | 'SETTINGS';
+type GameMode = 'solo' | 'multiplayer';
 
 const GameManager: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<GameScreen>('START_MENU');
+  const [gameMode, setGameMode] = useState<GameMode>('solo');
+  const [multiplayerData, setMultiplayerData] = useState<{ roomId: string; playerId: string } | null>(null);
 
   const handlePlaySolo = () => {
+    setGameMode('solo');
     // Show loading screen while models load
     setCurrentScreen('LOADING');
   };
@@ -20,7 +25,14 @@ const GameManager: React.FC = () => {
   };
 
   const handlePlayOnline = () => {
-    console.log('Online multiplayer coming soon!');
+    setGameMode('multiplayer');
+    setCurrentScreen('MULTIPLAYER_LOBBY');
+  };
+
+  const handleStartMultiplayerGame = (roomId: string, playerId: string) => {
+    setMultiplayerData({ roomId, playerId });
+    // Go to loading screen first, then combat
+    setCurrentScreen('LOADING');
   };
 
   const handleSettings = () => {
@@ -30,6 +42,8 @@ const GameManager: React.FC = () => {
 
   const handleReturnToMenu = () => {
     setCurrentScreen('START_MENU');
+    setGameMode('solo');
+    setMultiplayerData(null);
   };
 
   return (
@@ -42,12 +56,23 @@ const GameManager: React.FC = () => {
         />
       )}
 
+      {currentScreen === 'MULTIPLAYER_LOBBY' && (
+        <MultiplayerLobby
+          onBackToMenu={handleReturnToMenu}
+          onStartGame={handleStartMultiplayerGame}
+        />
+      )}
+
       {currentScreen === 'LOADING' && (
         <LoadingScreen onLoadingComplete={handleLoadingComplete} />
       )}
 
       {currentScreen === 'COMBAT' && (
-        <GameScene3D onReturnToMenu={handleReturnToMenu} />
+        <GameScene3D 
+          onReturnToMenu={handleReturnToMenu}
+          gameMode={gameMode}
+          multiplayerData={multiplayerData}
+        />
       )}
 
       {/* Future screens */}

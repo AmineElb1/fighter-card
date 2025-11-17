@@ -16,6 +16,12 @@ interface GameStore {
   // Game State
   gameState: GameState3D | null;
   
+  // Multiplayer State
+  isMultiplayer: boolean;
+  myPlayerId: string | null; // 'player1' or 'player2'
+  roomId: string | null;
+  setMultiplayerMode: (roomId: string, playerId: string) => void;
+  
   // UI State
   selectedCard: string | null;
   hoveredFighter: string | null;
@@ -70,6 +76,12 @@ const defaultCameraTarget = new Vector3(0, 3, 0);
 const useGameStore = create<GameStore>((set, get) => ({
   // Initial State
   gameState: null,
+  
+  // Multiplayer State
+  isMultiplayer: false,
+  myPlayerId: null,
+  roomId: null,
+  
   selectedCard: null,
   hoveredFighter: null,
   isLoading: false,
@@ -181,15 +193,28 @@ const useGameStore = create<GameStore>((set, get) => ({
 
   // Play a card - the main combat action
   playCard: (cardId: string, targetId?: string) => {
-    const { gameState, selectedCard } = get();
-    if (!gameState || !selectedCard) return;
+    const { gameState, selectedCard, isMultiplayer } = get();
+    if (!gameState) return;
+    
+    // In multiplayer, we might be playing opponent's card (no selectedCard needed)
+    // In solo mode, we need selectedCard
+    if (!isMultiplayer && !selectedCard) {
+      console.log('⚠️ No card selected in solo mode');
+      return;
+    }
 
     // Find the active player and their card
     const activePlayer = gameState.players.find(p => p.id === gameState.activePlayer);
-    if (!activePlayer) return;
+    if (!activePlayer) {
+      console.log('⚠️ No active player found');
+      return;
+    }
 
     const card = activePlayer.fighter.deck.find(c => c.id === cardId);
-    if (!card) return;
+    if (!card) {
+      console.log('⚠️ Card not found in deck:', cardId);
+      return;
+    }
 
     // For attack cards, we need a target
     if (card.type === 'attack' && !targetId) {
@@ -237,6 +262,14 @@ const useGameStore = create<GameStore>((set, get) => ({
 
   setError: (error: string | null) => {
     set({ error });
+  },
+
+  setMultiplayerMode: (roomId: string, playerId: string) => {
+    set({ 
+      isMultiplayer: true,
+      myPlayerId: playerId,
+      roomId: roomId
+    });
   },
 
   setTestAnimationState: (state) => {
@@ -356,7 +389,7 @@ const useGameStore = create<GameStore>((set, get) => ({
 
   // Process combat actions: handle damage, defense, animations
   processCombatActions: () => {
-    const { gameState, defendingFighters, setFighterAnimation } = get();
+    const { gameState, defendingFighters, setFighterAnimation, isMultiplayer, myPlayerId } = get();
     if (!gameState || gameState.combatActions.length === 0) return;
 
     // Process the first action in the queue
@@ -364,6 +397,10 @@ const useGameStore = create<GameStore>((set, get) => ({
     
     console.log('🎮 Processing combat action:', action);
     console.log('🎮 All players:', gameState.players.map(p => ({ id: p.id, fighterId: p.fighter.id, name: p.fighter.name })));
+    
+    // In multiplayer, check if this is our action or opponent's
+    const isMyAction = !isMultiplayer || (gameState.activePlayer === myPlayerId);
+    console.log('🎮 Is my action?', isMyAction, '(activePlayer:', gameState.activePlayer, 'myPlayerId:', myPlayerId, ')');
     
     if (action.type === 'attack' && action.target && action.card && action.damage !== undefined) {
       // ATTACK CARD: Deal damage to target
@@ -375,61 +412,82 @@ const useGameStore = create<GameStore>((set, get) => ({
       console.log('🎯 Found source player:', sourcePlayer?.fighter.name);
       
       if (targetPlayer && sourcePlayer) {
-        // Trigger attacker animation based on card
+        // Trigger attacker animation based on card (ALWAYS for visual feedback)
         setFighterAnimation(action.source, action.card.castAnimation);
         
-        // Calculate damage (with defense reduction if target is defending)
-        let finalDamage = action.damage;
-        const defenseAmount = defendingFighters[action.target] || 0;
-        
-        if (defenseAmount > 0) {
-          // Target is defending: reduce damage
-          finalDamage = Math.max(0, action.damage - defenseAmount);
-          console.log(`⚔️ Attack reduced by defense! ${action.damage} → ${finalDamage}`);
+        // In multiplayer: Only the active player calculates damage
+        // The opponent will get health updates from gameStateUpdate
+        if (isMyAction) {
+          console.log('💪 Calculating damage locally (my action)');
+          
+          // Calculate damage (with defense reduction if target is defending)
+          let finalDamage = action.damage;
+          const defenseAmount = defendingFighters[action.target] || 0;
+          
+          if (defenseAmount > 0) {
+            // Target is defending: reduce damage
+            finalDamage = Math.max(0, action.damage - defenseAmount);
+            console.log(`⚔️ Attack reduced by defense! ${action.damage} → ${finalDamage}`);
+          }
+          
+          // Apply damage to target
+          const oldHealth = targetPlayer.fighter.health;
+          const newHealth = Math.max(0, targetPlayer.fighter.health - finalDamage);
+          console.log(`💊 Health update: ${oldHealth} → ${newHealth} (damage: ${finalDamage})`);
+          
+          // Update fighter health in the state
+          const updatedPlayers = gameState.players.map(player => {
+            if (player.fighter.id === action.target) {
+              return {
+                ...player,
+                fighter: {
+                  ...player.fighter,
+                  health: newHealth
+                }
+              };
+            }
+            return player;
+          });
+          
+          // Update gameState with new health AND remove the processed action
+          set({
+            gameState: {
+              ...gameState,
+              players: updatedPlayers,
+              combatActions: gameState.combatActions.slice(1)
+            }
+          });
+          
+          console.log(`⚔️ ${sourcePlayer.fighter.name} attacks ${targetPlayer.fighter.name} for ${finalDamage} damage!`);
+          console.log(`💊 New health should be: ${newHealth}`);
+        } else {
+          console.log('👀 Skipping damage calculation (opponent action - will sync from gameStateUpdate)');
+          
+          // Just remove the action from queue without applying damage
+          set({
+            gameState: {
+              ...gameState,
+              combatActions: gameState.combatActions.slice(1)
+            }
+          });
         }
-        
-        // Apply damage to target
-        const oldHealth = targetPlayer.fighter.health;
-        const newHealth = Math.max(0, targetPlayer.fighter.health - finalDamage);
-        console.log(`💊 Health update: ${oldHealth} → ${newHealth} (damage: ${finalDamage})`);
-        
-        // Update fighter health in the state
-        const updatedPlayers = gameState.players.map(player => {
-          if (player.fighter.id === action.target) {
-            return {
-              ...player,
-              fighter: {
-                ...player.fighter,
-                health: newHealth
-              }
-            };
-          }
-          return player;
-        });
-        
-        // Update gameState with new health AND remove the processed action
-        set({
-          gameState: {
-            ...gameState,
-            players: updatedPlayers,
-            combatActions: gameState.combatActions.slice(1)
-          }
-        });
-        
-        console.log(`⚔️ ${sourcePlayer.fighter.name} attacks ${targetPlayer.fighter.name} for ${finalDamage} damage!`);
-        console.log(`💊 New health should be: ${newHealth}`);
         
         // Reset animation after duration
         setTimeout(() => {
           setFighterAnimation(action.source, 'idle');
           
-          // Check if target died
-          if (newHealth <= 0 && action.target) {
-            setFighterAnimation(action.target, 'defeat');
-            setFighterAnimation(action.source, 'victory'); // Winner does victory animation
-            get().setGamePhase(GamePhase.VICTORY);
-            console.log(`💀 ${targetPlayer.fighter.name} has been defeated!`);
-            console.log(`🎉 ${sourcePlayer.fighter.name} wins!`);
+          // Check if target died (only if we calculated damage locally)
+          if (isMyAction && action.target) {
+            const currentState = get().gameState;
+            const currentTarget = currentState?.players.find(p => p.fighter.id === action.target);
+            
+            if (currentTarget && currentTarget.fighter.health <= 0) {
+              setFighterAnimation(action.target, 'defeat');
+              setFighterAnimation(action.source, 'victory'); // Winner does victory animation
+              get().setGamePhase(GamePhase.VICTORY);
+              console.log(`💀 ${targetPlayer.fighter.name} has been defeated!`);
+              console.log(`🎉 ${sourcePlayer.fighter.name} wins!`);
+            }
           }
         }, action.duration);
       }
@@ -485,7 +543,12 @@ const useGameStore = create<GameStore>((set, get) => ({
         setTimeout(() => {
           const state = get().gameState;
           if (state && state.phase === GamePhase.RESOLUTION) {
-            get().endTurn();
+            // In multiplayer mode, don't auto-end turn here
+            // It will be handled by the multiplayer sync
+            const storeState = get();
+            if (!storeState.isMultiplayer) {
+              get().endTurn();
+            }
           }
         }, 1500); // Show resolution for 1.5 seconds
       }

@@ -1,6 +1,7 @@
 import React from 'react';
 import useGameStore from '../../store/gameStore';
 import { GamePhase } from '../../types/game';
+import { useMultiplayerSync } from '../../hooks/useMultiplayerSync';
 import './CompactCombatUI.css';
 
 interface CompactCombatUIProps {
@@ -12,8 +13,12 @@ const CompactCombatUI: React.FC<CompactCombatUIProps> = ({ onReturnToMenu }) => 
     gameState, 
     selectedCard, 
     playCard, 
-    restartGame 
+    restartGame,
+    isMultiplayer,
+    myPlayerId
   } = useGameStore();
+  
+  const { multiplayerPlayCard } = useMultiplayerSync();
 
   if (!gameState) return null;
 
@@ -21,6 +26,9 @@ const CompactCombatUI: React.FC<CompactCombatUIProps> = ({ onReturnToMenu }) => 
   const opponent = gameState.players.find(p => p.id !== gameState.activePlayer);
 
   if (!activePlayer || !opponent) return null;
+
+  // Check if it's this player's turn in multiplayer
+  const isMyTurn = !isMultiplayer || (gameState.activePlayer === myPlayerId);
 
   const isGameOver = gameState.phase === GamePhase.VICTORY;
   const winner = gameState.players.find(p => p.fighter.health > 0);
@@ -32,10 +40,15 @@ const CompactCombatUI: React.FC<CompactCombatUIProps> = ({ onReturnToMenu }) => 
   const handlePlayCard = () => {
     if (!card || isGameOver) return;
 
-    if (card.type === "attack") {
-      playCard(card.id, opponent.fighter.id);
+    const targetId = card.type === "attack" ? opponent.fighter.id : activePlayer.fighter.id;
+    
+    // Use multiplayer function if in multiplayer mode
+    if (isMultiplayer) {
+      console.log('🌐 [CompactUI] Playing card in multiplayer mode');
+      multiplayerPlayCard(card.id, targetId);
     } else {
-      playCard(card.id, activePlayer.fighter.id);
+      console.log('🎮 [CompactUI] Playing card in solo mode');
+      playCard(card.id, targetId);
     }
   };
 
@@ -69,6 +82,7 @@ const CompactCombatUI: React.FC<CompactCombatUIProps> = ({ onReturnToMenu }) => 
           <div className="compact-info">
             <span className={`player-turn ${activePlayer.id === 'player1' ? 'player-blue' : 'player-red'}`}>
               {activePlayer.name}'s Turn
+              {isMultiplayer && (isMyTurn ? ' (YOU)' : ' (OPPONENT)')}
             </span>
             <span className={`phase-label phase-${gameState.phase}`}>
               {gameState.phase === GamePhase.CARD_SELECTION && "Select Move"}
@@ -77,8 +91,15 @@ const CompactCombatUI: React.FC<CompactCombatUIProps> = ({ onReturnToMenu }) => 
             </span>
           </div>
 
-          {/* Card Selection */}
-          {gameState.phase === GamePhase.CARD_SELECTION && (
+          {/* Waiting for opponent message */}
+          {isMultiplayer && !isMyTurn && gameState.phase === GamePhase.CARD_SELECTION && (
+            <div className="compact-status waiting-opponent">
+              ⏳ Waiting for opponent's move...
+            </div>
+          )}
+
+          {/* Card Selection - Only show if it's your turn */}
+          {gameState.phase === GamePhase.CARD_SELECTION && (!isMultiplayer || isMyTurn) && (
             <div className="compact-actions">
               {selectedCard && card ? (
                 <>

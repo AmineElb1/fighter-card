@@ -5,6 +5,7 @@ import { Physics } from '@react-three/cannon';
 import { Vector3 } from 'three';
 
 import useGameStore from '../../store/gameStore';
+import { useMultiplayerSync } from '../../hooks/useMultiplayerSync';
 import Fighter3D from './Fighter3D';
 import FighterFBXAnimated from './FighterFBXAnimated';
 import CombatArena from './CombatArena';
@@ -16,17 +17,36 @@ import CompactCombatUI from '../ui/CompactCombatUI';
 interface GameScene3DProps {
   gameId?: string;
   onReturnToMenu?: () => void;
+  gameMode?: 'solo' | 'multiplayer';
+  multiplayerData?: { roomId: string; playerId: string } | null;
 }
 
-const GameScene3D: React.FC<GameScene3DProps> = ({ gameId = 'game-1', onReturnToMenu }) => {
+const GameScene3D: React.FC<GameScene3DProps> = ({ 
+  gameId = 'game-1', 
+  onReturnToMenu,
+  gameMode = 'solo',
+  multiplayerData = null 
+}) => {
   const { 
     gameState, 
     initializeGame, 
     setSceneReady, 
     cameraPosition, 
     cameraTarget,
-    error 
+    error,
+    setMultiplayerMode 
   } = useGameStore();
+
+  // Initialize multiplayer sync
+  useMultiplayerSync();
+
+  // Set up multiplayer mode
+  useEffect(() => {
+    if (gameMode === 'multiplayer' && multiplayerData) {
+      console.log('🌐 Setting up multiplayer mode:', multiplayerData);
+      setMultiplayerMode(multiplayerData.roomId, multiplayerData.playerId);
+    }
+  }, [gameMode, multiplayerData, setMultiplayerMode]);
 
   useEffect(() => {
     if (!gameState) {
@@ -184,9 +204,11 @@ const GameScene3D: React.FC<GameScene3DProps> = ({ gameId = 'game-1', onReturnTo
       {/* UI */}
       <div className="ui-overlay">
 
-        {/* Cards */}
+        {/* Cards - Show player's own cards in multiplayer, or active player's cards in solo */}
         <CardHand 
-          cards={gameState.players.find(p => p.id === gameState.activePlayer)?.fighter.deck || []}
+          cards={gameMode === 'multiplayer' && multiplayerData
+            ? gameState.players.find(p => p.id === multiplayerData.playerId)?.fighter.deck || []
+            : gameState.players.find(p => p.id === gameState.activePlayer)?.fighter.deck || []}
           activePlayerId={gameState.activePlayer}
         />
 

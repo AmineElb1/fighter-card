@@ -38,11 +38,10 @@ const StartMenu: React.FC<StartMenuProps> = ({ onPlaySolo, onPlayOnline, onSetti
           <button 
             className="menu-btn secondary"
             onClick={onPlayOnline}
-            disabled
           >
             <span className="btn-icon">🌐</span>
             <span className="btn-text">Play Online</span>
-            <span className="btn-subtitle">Coming Soon</span>
+            <span className="btn-subtitle">Multiplayer Mode</span>
           </button>
 
           <button 

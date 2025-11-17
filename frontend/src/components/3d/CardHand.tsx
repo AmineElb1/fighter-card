@@ -1,6 +1,7 @@
 import React from 'react';
 import type { MoveCard3D } from '../../types/game';
 import useGameStore from '../../store/gameStore';
+import { useMultiplayerSync } from '../../hooks/useMultiplayerSync';
 import './CardHand.css';
 
 interface CardHandProps {
@@ -9,9 +10,27 @@ interface CardHandProps {
 }
 
 const CardHand: React.FC<CardHandProps> = ({ cards }) => {
-  const { selectedCard, selectCard, playCard } = useGameStore();
+  const { 
+    selectedCard, 
+    selectCard, 
+    playCard,
+    gameState,
+    isMultiplayer,
+    myPlayerId
+  } = useGameStore();
+  
+  const { multiplayerPlayCard } = useMultiplayerSync();
 
+  // Check if it's this player's turn
+  const isMyTurn = !isMultiplayer || (gameState?.activePlayer === myPlayerId);
+  
   const handleCardClick = (card: MoveCard3D) => {
+    // In multiplayer, only allow actions on your turn
+    if (!isMyTurn) {
+      console.log('⏳ Not your turn!');
+      return;
+    }
+
     if (selectedCard === card.id) {
       // Deselect if already selected
       selectCard(null);
@@ -22,9 +41,29 @@ const CardHand: React.FC<CardHandProps> = ({ cards }) => {
   };
 
   const handlePlayCard = (card: MoveCard3D) => {
+    console.log('🎴 handlePlayCard called for card:', card.id);
+    console.log('🎴 isMyTurn:', isMyTurn);
+    console.log('🎴 selectedCard:', selectedCard);
+    console.log('🎴 isMultiplayer:', isMultiplayer);
+    
+    // In multiplayer, only allow actions on your turn
+    if (!isMyTurn) {
+      console.log('⏳ Not your turn!');
+      return;
+    }
+
     if (selectedCard === card.id) {
-      // For now, play without target (self-targeting or area effect)
-      playCard(card.id);
+      console.log('✅ Card is selected, playing...');
+      // Use multiplayer function if in multiplayer mode, otherwise use local
+      if (isMultiplayer) {
+        console.log('🌐 Playing card in multiplayer mode');
+        multiplayerPlayCard(card.id);
+      } else {
+        console.log('🎮 Playing card in solo mode');
+        playCard(card.id);
+      }
+    } else {
+      console.log('❌ Card not selected:', selectedCard, '!==', card.id);
     }
   };
 
