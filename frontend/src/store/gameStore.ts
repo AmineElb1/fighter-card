@@ -277,7 +277,7 @@ const useGameStore = create<GameStore>((set, get) => ({
       ],
       
       // Combat Properties
-      deck: fighterData.deck || createDefaultDeck(fighterData.element || ElementType.NEUTRAL),
+      deck: fighterData.deck || createFighterDeck(fighterData.name || 'Unknown', fighterData.element || ElementType.NEUTRAL),
       currentStamina: fighterData.currentStamina || 100,
       maxStamina: fighterData.maxStamina || 100,
       statusEffects: fighterData.statusEffects || []
@@ -592,8 +592,8 @@ const useGameStore = create<GameStore>((set, get) => ({
   }
 }));
 
-// Helper function to create default deck - Each fighter has exactly 3 unique cards
-function createDefaultDeck(element: ElementType): MoveCard3D[] {
+// Helper function to create fighter-specific deck - Each fighter has exactly 3 unique cards
+function createFighterDeck(fighterName: string, element: ElementType): MoveCard3D[] {
   const elementColors = {
     [ElementType.FIRE]: '#ff4444',
     [ElementType.WATER]: '#4444ff',
@@ -605,63 +605,187 @@ function createDefaultDeck(element: ElementType): MoveCard3D[] {
     [ElementType.NEUTRAL]: '#888888'
   };
 
-  // Each fighter gets exactly 3 cards: 2 attack cards and 1 defense card
-  const baseCards: Omit<MoveCard3D, 'id' | 'element' | 'glowColor'>[] = [
+  const glowColor = elementColors[element];
+
+  // Ortiz's deck (Fire element)
+  if (fighterName === 'Ortiz') {
+    const ortizCards: Omit<MoveCard3D, 'id' | 'element' | 'glowColor'>[] = [
+      {
+        name: 'Quick Strike',
+        description: 'A fast punch attack',
+        type: 'attack',
+        damage: 20,
+        staminaCost: 10,
+        cooldown: 0,
+        rarity: CardRarity.COMMON,
+        castAnimation: 'punch',
+        impactAnimation: 'hit',
+        particleEffect: 'sparks',
+        soundEffect: 'punch-hit',
+        cardTexture: '/ortizPunch.png',
+        cardPosition: new Vector3(0, 0, 0),
+        cardRotation: new Vector3(0, 0, 0)
+      },
+      {
+        name: 'Power Kick',
+        description: 'A powerful kick attack',
+        type: 'attack',
+        damage: 35,
+        staminaCost: 20,
+        cooldown: 0,
+        rarity: CardRarity.UNCOMMON,
+        castAnimation: 'kick',
+        impactAnimation: 'heavy-hit',
+        particleEffect: 'energy-burst',
+        soundEffect: 'kick-impact',
+        cardTexture: '/ortizKick.png',
+        cardPosition: new Vector3(0, 0, 0),
+        cardRotation: new Vector3(0, 0, 0)
+      },
+      {
+        name: 'Defensive Stance',
+        description: 'Block and reduce incoming damage',
+        type: 'defense',
+        damage: 15,
+        staminaCost: 10,
+        cooldown: 0,
+        rarity: CardRarity.COMMON,
+        castAnimation: 'block',
+        impactAnimation: 'block',
+        particleEffect: 'shield',
+        soundEffect: 'block-sound',
+        cardTexture: '/ortizDefence.png',
+        cardPosition: new Vector3(0, 0, 0),
+        cardRotation: new Vector3(0, 0, 0)
+      }
+    ];
+
+    return ortizCards.map((card, index) => ({
+      ...card,
+      id: `ortiz_card_${index}`,
+      element,
+      glowColor
+    }));
+  }
+
+  // Steve (Ninja)'s deck (Earth element)
+  if (fighterName === 'Steve') {
+    const ninjaCards: Omit<MoveCard3D, 'id' | 'element' | 'glowColor'>[] = [
+      {
+        name: 'Shadow Punch',
+        description: 'A swift ninja strike',
+        type: 'attack',
+        damage: 20,
+        staminaCost: 10,
+        cooldown: 0,
+        rarity: CardRarity.COMMON,
+        castAnimation: 'punch',
+        impactAnimation: 'hit',
+        particleEffect: 'sparks',
+        soundEffect: 'punch-hit',
+        cardTexture: '/ninjaPunch.png',
+        cardPosition: new Vector3(0, 0, 0),
+        cardRotation: new Vector3(0, 0, 0)
+      },
+      {
+        name: 'Ninja Kick',
+        description: 'A devastating kick',
+        type: 'attack',
+        damage: 35,
+        staminaCost: 20,
+        cooldown: 0,
+        rarity: CardRarity.UNCOMMON,
+        castAnimation: 'kick',
+        impactAnimation: 'heavy-hit',
+        particleEffect: 'energy-burst',
+        soundEffect: 'kick-impact',
+        cardTexture: '/ninjaKick.png',
+        cardPosition: new Vector3(0, 0, 0),
+        cardRotation: new Vector3(0, 0, 0)
+      },
+      {
+        name: 'Shadow Guard',
+        description: 'Block with ninja techniques',
+        type: 'defense',
+        damage: 15,
+        staminaCost: 10,
+        cooldown: 0,
+        rarity: CardRarity.COMMON,
+        castAnimation: 'block',
+        impactAnimation: 'block',
+        particleEffect: 'shield',
+        soundEffect: 'block-sound',
+        cardTexture: '/ninjaDefence.png',
+        cardPosition: new Vector3(0, 0, 0),
+        cardRotation: new Vector3(0, 0, 0)
+      }
+    ];
+
+    return ninjaCards.map((card, index) => ({
+      ...card,
+      id: `ninja_card_${index}`,
+      element,
+      glowColor
+    }));
+  }
+
+  // Default deck for unknown fighters
+  const defaultCards: Omit<MoveCard3D, 'id' | 'element' | 'glowColor'>[] = [
     {
-      name: 'Quick Strike',
-      description: 'A fast punch attack',
+      name: 'Basic Attack',
+      description: 'A simple attack',
       type: 'attack',
       damage: 20,
       staminaCost: 10,
       cooldown: 0,
       rarity: CardRarity.COMMON,
-      castAnimation: 'punch', // Triggers punch animation
+      castAnimation: 'punch',
       impactAnimation: 'hit',
       particleEffect: 'sparks',
       soundEffect: 'punch-hit',
-      cardTexture: '/cards/quick-strike.jpg',
+      cardTexture: '',
       cardPosition: new Vector3(0, 0, 0),
       cardRotation: new Vector3(0, 0, 0)
     },
     {
-      name: 'Power Kick',
-      description: 'A powerful kick attack',
+      name: 'Strong Attack',
+      description: 'A powerful attack',
       type: 'attack',
       damage: 35,
       staminaCost: 20,
       cooldown: 0,
       rarity: CardRarity.UNCOMMON,
-      castAnimation: 'kick', // Triggers kick animation
+      castAnimation: 'kick',
       impactAnimation: 'heavy-hit',
       particleEffect: 'energy-burst',
       soundEffect: 'kick-impact',
-      cardTexture: '/cards/power-kick.jpg',
+      cardTexture: '',
       cardPosition: new Vector3(0, 0, 0),
       cardRotation: new Vector3(0, 0, 0)
     },
     {
-      name: 'Defensive Stance',
-      description: 'Block and reduce incoming damage by 15',
+      name: 'Block',
+      description: 'Reduce incoming damage',
       type: 'defense',
-      damage: 15, // For defense cards: amount of damage reduction
+      damage: 15,
       staminaCost: 10,
       cooldown: 0,
       rarity: CardRarity.COMMON,
-      castAnimation: 'block', // Triggers block animation
+      castAnimation: 'block',
       impactAnimation: 'block',
       particleEffect: 'shield',
       soundEffect: 'block-sound',
-      cardTexture: '/cards/defense.jpg',
+      cardTexture: '',
       cardPosition: new Vector3(0, 0, 0),
       cardRotation: new Vector3(0, 0, 0)
     }
   ];
 
-  return baseCards.map((card, index) => ({
+  return defaultCards.map((card, index) => ({
     ...card,
     id: `${element}_card_${index}`,
     element,
-    glowColor: elementColors[element]
+    glowColor
   }));
 }
 

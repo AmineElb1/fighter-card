@@ -62,54 +62,31 @@ const CardHand: React.FC<CardHandProps> = ({ cards }) => {
                 {/* Card Header */}
                 <div className="card-header">
                   <h3 className="card-name">{card.name}</h3>
-                  <div className="card-cost">{card.staminaCost}</div>
+                  <div className="card-stat-badge">
+                    <span className="stat-value">{card.damage}</span>
+                  </div>
+                </div>
+
+                {/* Card Image Frame - Pokemon Style */}
+                <div className="card-image">
+                  {card.cardTexture && (
+                    <img 
+                      src={card.cardTexture} 
+                      alt={card.name}
+                      className="card-artwork"
+                    />
+                  )}
+                  {!card.cardTexture && (
+                    <div className="element-indicator" style={{ backgroundColor: card.glowColor }}>
+                      {card.element.toUpperCase()}
+                    </div>
+                  )}
                 </div>
 
                 {/* Card Type Badge */}
                 <div className={`card-type-badge ${card.type}`}>
-                  {card.type === 'attack' ? '⚔️ ATTACK' : '🛡️ DEFENSE'}
+                  {card.type === 'attack' ? 'ATTACK' : 'DEFENSE'}
                 </div>
-
-                {/* Card Image Placeholder */}
-                <div className="card-image">
-                  <div className="element-indicator" style={{ backgroundColor: card.glowColor }}>
-                    {card.element.toUpperCase()}
-                  </div>
-                </div>
-
-                {/* Card Stats */}
-                <div className="card-stats">
-                  {card.type === 'attack' && card.damage > 0 && (
-                    <div className="stat damage">
-                      <span className="stat-icon">⚔️</span>
-                      <span className="stat-label">Damage</span>
-                      <span className="stat-value">{card.damage}</span>
-                    </div>
-                  )}
-                  {card.type === 'defense' && card.damage > 0 && (
-                    <div className="stat defense">
-                      <span className="stat-icon">🛡️</span>
-                      <span className="stat-label">Block</span>
-                      <span className="stat-value">{card.damage}</span>
-                    </div>
-                  )}
-                  <div className="stat stamina">
-                    <span className="stat-icon">⚡</span>
-                    <span className="stat-label">Cost</span>
-                    <span className="stat-value">{card.staminaCost}</span>
-                  </div>
-                </div>
-
-                {/* Card Description */}
-                <div className="card-description">
-                  {card.description}
-                </div>
-
-                {/* Rarity Gem */}
-                <div 
-                  className="rarity-gem"
-                  style={{ backgroundColor: getRarityColor(card.rarity) }}
-                />
               </div>
             </div>
 
