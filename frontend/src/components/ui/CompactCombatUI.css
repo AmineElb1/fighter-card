@@ -1,0 +1,257 @@
+/* Compact Combat UI - Under Cards */
+.compact-combat-ui {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  min-width: 400px;
+  max-width: 550px;
+  background: rgba(15, 15, 20, 0.95);
+  backdrop-filter: blur(12px);
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  border-radius: 12px;
+  padding: 10px 16px;
+  z-index: 1500;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Info Bar */
+.compact-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.player-turn {
+  font-weight: 700;
+  font-size: 1.1em;
+  padding: 6px 16px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex: 1;
+  text-align: center;
+  transition: all 0.3s ease;
+  animation: turnGlow 2s ease-in-out infinite;
+}
+
+.player-blue {
+  background: linear-gradient(135deg, rgba(66, 153, 225, 0.3), rgba(49, 130, 206, 0.2));
+  color: #63b3ed;
+  border: 2px solid rgba(66, 153, 225, 0.5);
+  box-shadow: 0 0 20px rgba(66, 153, 225, 0.3);
+}
+
+.player-red {
+  background: linear-gradient(135deg, rgba(245, 101, 101, 0.3), rgba(229, 62, 62, 0.2));
+  color: #fc8181;
+  border: 2px solid rgba(245, 101, 101, 0.5);
+  box-shadow: 0 0 20px rgba(245, 101, 101, 0.3);
+}
+
+@keyframes turnGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px currentColor;
+  }
+  50% {
+    box-shadow: 0 0 25px currentColor;
+  }
+}
+
+.phase-label {
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 0.8em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.phase-card_selection {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.phase-combat {
+  background: linear-gradient(135deg, #f093fb, #f5576c);
+  animation: pulse 1s infinite;
+}
+
+.phase-resolution {
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Actions Area */
+.compact-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.selected-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  color: white;
+  font-size: 0.9em;
+}
+
+.selected-info strong {
+  color: #ffd700;
+  font-size: 0.85em;
+}
+
+.card-badge {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.75em;
+  font-weight: bold;
+}
+
+.card-badge.attack {
+  background: rgba(255, 68, 68, 0.3);
+  border: 1px solid #ff4444;
+  color: #ff6b6b;
+}
+
+.card-badge.defense {
+  background: rgba(67, 233, 123, 0.3);
+  border: 1px solid #43e97b;
+  color: #43e97b;
+}
+
+.instruction {
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+  text-align: center;
+  width: 100%;
+  padding: 6px;
+  font-size: 0.9em;
+}
+
+/* Buttons */
+.compact-btn {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.compact-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.compact-btn.play {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  min-width: 120px;
+  font-weight: 700;
+}
+
+.compact-btn.play:hover {
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+}
+
+.compact-btn.restart {
+  background: linear-gradient(135deg, #43e97b, #38f9d7);
+  color: white;
+}
+
+.compact-btn.menu {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+}
+
+/* Status Messages */
+.compact-status {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.95em;
+  padding: 8px;
+  animation: textPulse 1.5s infinite;
+}
+
+@keyframes textPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Victory Screen */
+.compact-victory {
+  text-align: center;
+  padding: 10px;
+}
+
+.victory-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.8em;
+  color: #43e97b;
+  text-shadow: 0 0 10px rgba(67, 233, 123, 0.5);
+}
+
+.victory-content p {
+  margin: 0 0 15px 0;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.victory-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .compact-combat-ui {
+    width: 95%;
+    padding: 12px 15px;
+  }
+
+  .compact-info {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .compact-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .compact-btn {
+    width: 100%;
+  }
+
+  .selected-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}

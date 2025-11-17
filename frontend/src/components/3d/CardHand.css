@@ -1,9 +1,9 @@
 .card-hand {
   position: fixed;
-  bottom: 20px;
+  bottom: 140px; /* Moved up to make room for compact UI */
   left: 50%;
   transform: translateX(-50%);
-  z-index: 100;
+  z-index: 1000;
 }
 
 .card-container {
@@ -197,32 +197,4 @@
 @keyframes pulse {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 0.6; }
-}
-
-.hand-info {
-  text-align: center;
-  color: white;
-  font-size: 12px;
-  background: rgba(0, 0, 0, 0.7);
-  padding: 8px 12px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  justify-content: center;
-}
-
-.play-button {
-  background: var(--glow-color, #4CAF50);
-  color: white;
-  border: none;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 10px;
-  margin-left: 8px;
-}
-
-.play-button:hover {
-  opacity: 0.8;
 }

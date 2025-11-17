@@ -121,21 +121,6 @@ const CardHand: React.FC<CardHandProps> = ({ cards }) => {
         ))}
       </div>
 
-      {/* Hand Info */}
-      <div className="hand-info">
-        <div className="card-count">Cards: {cards.length}</div>
-        {selectedCard && (
-          <div className="selected-card-info">
-            <strong>Selected:</strong> {cards.find(c => c.id === selectedCard)?.name}
-            <button 
-              className="play-button"
-              onClick={() => selectedCard && playCard(selectedCard)}
-            >
-              Play Card
-            </button>
-          </div>
-        )}
-      </div>
     </div>
   );
 };

@@ -11,7 +11,7 @@ import CombatArena from './CombatArena';
 import CardHand from './CardHand';
 import LoadingFallback from './LoadingFallback';
 import LoadingBox from './LoadingBox';
-import CombatController from '../ui/CombatController';
+import CompactCombatUI from '../ui/CompactCombatUI';
 
 interface GameScene3DProps {
   gameId?: string;
@@ -184,19 +184,14 @@ const GameScene3D: React.FC<GameScene3DProps> = ({ gameId = 'game-1', onReturnTo
       {/* UI */}
       <div className="ui-overlay">
 
-        {/* Combat Controller - Main turn management UI */}
-        <CombatController onReturnToMenu={onReturnToMenu} />
-
         {/* Cards */}
         <CardHand 
           cards={gameState.players.find(p => p.id === gameState.activePlayer)?.fighter.deck || []}
           activePlayerId={gameState.activePlayer}
         />
 
-        {/* Simplified instructions */}
-        <div className="game-instructions">
-          <p>💡 Select a card and choose your action!</p>
-        </div>
+        {/* Compact Combat UI - Under Cards */}
+        <CompactCombatUI onReturnToMenu={onReturnToMenu} />
 
       </div>
     </div>
