@@ -1,0 +1,228 @@
+.card-hand {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+}
+
+.card-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.card {
+  width: 120px;
+  height: 180px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  transform-origin: bottom center;
+}
+
+.card:hover {
+  transform: translateY(-20px) scale(1.05);
+}
+
+.card.selected {
+  transform: translateY(-30px) scale(1.1);
+}
+
+.card-background {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.card-border {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border: 2px solid var(--rarity-color, #888);
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+.card-content {
+  padding: 8px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 2;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.card-name {
+  font-size: 11px;
+  font-weight: bold;
+  color: white;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.card-cost {
+  background: var(--glow-color, #4CAF50);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: bold;
+  min-width: 20px;
+  text-align: center;
+}
+
+.card-image {
+  flex: 1;
+  background: linear-gradient(45deg, #333, #555);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.element-indicator {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 8px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Card Type Badge */
+.card-type-badge {
+  text-align: center;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: bold;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.card-type-badge.attack {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  color: white;
+}
+
+.card-type-badge.defense {
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  color: white;
+}
+
+.card-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 3px 6px;
+  border-radius: 4px;
+}
+
+.stat-icon {
+  font-size: 11px;
+}
+
+.stat-label {
+  font-size: 8px;
+  opacity: 0.8;
+  flex: 1;
+}
+
+.stat-value {
+  font-weight: bold;
+  font-size: 10px;
+}
+
+.card-description {
+  font-size: 8px;
+  color: #cccccc;
+  line-height: 1.2;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rarity-gem {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.selection-glow {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 14px;
+  opacity: 0.3;
+  filter: blur(4px);
+  z-index: -1;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+.hand-info {
+  text-align: center;
+  color: white;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  justify-content: center;
+}
+
+.play-button {
+  background: var(--glow-color, #4CAF50);
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 10px;
+  margin-left: 8px;
+}
+
+.play-button:hover {
+  opacity: 0.8;
+}

@@ -1,0 +1,171 @@
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: linear-gradient(135deg, #1a1a2e, #16213e, #0f0f23);
+  color: white;
+  font-family: 'Arial', sans-serif;
+}
+
+.app-header {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 50;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: bold;
+  background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 3s ease infinite;
+}
+
+.app-header p {
+  margin: 5px 0 0 0;
+  font-size: 1rem;
+  opacity: 0.8;
+  font-weight: 300;
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.app-main {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.game-scene-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.ui-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.ui-overlay > * {
+  pointer-events: all;
+}
+
+.game-hud {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 15px;
+  border-radius: 10px;
+  font-size: 14px;
+  min-width: 200px;
+}
+
+.phase-indicator,
+.turn-indicator,
+.timer {
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.phase-indicator:last-child,
+.turn-indicator:last-child,
+.timer:last-child {
+  margin-bottom: 0;
+}
+
+.health-bar {
+  position: absolute;
+  top: 100px;
+  width: 250px;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.health-bar:first-of-type {
+  left: 20px;
+}
+
+.health-bar:last-of-type {
+  right: 20px;
+}
+
+.health-bar.active {
+  border: 2px solid #ffff00;
+}
+
+.fighter-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.health-progress {
+  width: 100%;
+  height: 20px;
+  background: #333;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+
+.health-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #44ff44, #ffaa44, #ff4444);
+  transition: width 0.5s ease;
+}
+
+.health-text {
+  text-align: center;
+  font-size: 11px;
+  opacity: 0.9;
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #2d1b69, #11998e);
+  color: white;
+}
+
+.error-container h2 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.error-container p {
+  font-size: 1.2rem;
+  opacity: 0.8;
+}

@@ -1,0 +1,16 @@
+{
+  "name": "fighter-game-platform",
+  "version": "1.0.0",
+  "description": "3D Card-Based Fighting Game Platform",
+  "scripts": {
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "preview": "cd frontend && npm run preview",
+    "install-frontend": "cd frontend && npm install",
+    "install-backend": "cd backend && npm install",
+    "install-all": "npm run install-frontend && npm run install-backend"
+  },
+  "keywords": ["fighting-game", "3d", "react-three-fiber", "multiplayer", "card-game"],
+  "author": "Amine",
+  "license": "MIT"
+}
