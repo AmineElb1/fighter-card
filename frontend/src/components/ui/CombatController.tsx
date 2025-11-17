@@ -3,7 +3,11 @@ import useGameStore from '../../store/gameStore';
 import { GamePhase } from '../../types/game';
 import './CombatController.css';
 
-const CombatController: React.FC = () => {
+interface CombatControllerProps {
+  onReturnToMenu?: () => void;
+}
+
+const CombatController: React.FC<CombatControllerProps> = ({ onReturnToMenu }) => {
   const { 
     gameState, 
     selectedCard, 
@@ -117,12 +121,23 @@ const CombatController: React.FC = () => {
             </div>
           )}
 
-          <button 
-            className="restart-btn"
-            onClick={restartGame}
-          >
-            Restart Match
-          </button>
+          <div className="victory-buttons">
+            <button 
+              className="restart-btn"
+              onClick={restartGame}
+            >
+              🔄 Restart Match
+            </button>
+            
+            {onReturnToMenu && (
+              <button 
+                className="menu-btn"
+                onClick={onReturnToMenu}
+              >
+                🏠 Return to Menu
+              </button>
+            )}
+          </div>
         </div>
       )}
 

@@ -14,10 +14,11 @@ import LoadingBox from './LoadingBox';
 import CombatController from '../ui/CombatController';
 
 interface GameScene3DProps {
-  gameId: string;
+  gameId?: string;
+  onReturnToMenu?: () => void;
 }
 
-const GameScene3D: React.FC<GameScene3DProps> = ({ gameId }) => {
+const GameScene3D: React.FC<GameScene3DProps> = ({ gameId = 'game-1', onReturnToMenu }) => {
   const { 
     gameState, 
     initializeGame, 
@@ -184,7 +185,7 @@ const GameScene3D: React.FC<GameScene3DProps> = ({ gameId }) => {
       <div className="ui-overlay">
 
         {/* Combat Controller - Main turn management UI */}
-        <CombatController />
+        <CombatController onReturnToMenu={onReturnToMenu} />
 
         {/* Cards */}
         <CardHand 
