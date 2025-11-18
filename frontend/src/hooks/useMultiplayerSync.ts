@@ -107,9 +107,9 @@ export const useMultiplayerSync = () => {
 
     // Cleanup listeners on unmount
     return () => {
-      socketService.off('cardPlayed', cardPlayedHandler);
-      socketService.off('turnEnded', turnEndedHandler);
-      socketService.off('gameStateUpdate', gameStateUpdateHandler);
+      socketService.off('cardPlayed');
+      socketService.off('turnEnded');
+      socketService.off('gameStateUpdate');
     };
   }, [isMultiplayer, myPlayerId, localPlayCard, localEndTurn, updateFighterHealth, setGamePhase]);
 
