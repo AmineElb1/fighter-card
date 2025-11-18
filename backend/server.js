@@ -10,7 +10,7 @@ const httpServer = createServer(app);
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
-  'https://your-frontend-domain.com', // Update this with your actual frontend URL
+  'https://fighter-game-frontend.vercel.app', // Update with your actual Vercel URL
   /https:\/\/.*\.vercel\.app$/, // Allow all Vercel preview URLs
   /https:\/\/.*\.netlify\.app$/, // Allow all Netlify preview URLs
 ];
@@ -386,7 +386,16 @@ app.get('/health', (req, res) => {
 
 // Start server
 const PORT = process.env.PORT || 3001;
+const isProduction = process.env.NODE_ENV === 'production';
+
 httpServer.listen(PORT, () => {
-  console.log(`🚀 WebSocket server running on http://localhost:${PORT}`);
-  console.log(`📡 Frontend should connect to: ws://localhost:${PORT}`);
+  console.log(`🚀 WebSocket server running on port ${PORT}`);
+  
+  if (isProduction) {
+    console.log(`📡 Frontend should connect to: wss://fighter-card.onrender.com`);
+  } else {
+    console.log(`📡 Frontend should connect to: ws://localhost:${PORT}`);
+  }
+  
+  console.log(`🔒 CORS enabled for:`, allowedOrigins);
 });
