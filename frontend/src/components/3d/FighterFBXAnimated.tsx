@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Text, Box, useFBX, useGLTF, useAnimations } from "@react-three/drei";
+import { Text, Box, useFBX, useAnimations } from "@react-three/drei";
 import * as THREE from "three";
 import useGameStore from "../../store/gameStore";
 import type { Fighter3D as Fighter3DType } from "../../types/game";
@@ -39,11 +39,9 @@ const FighterFBXAnimated: React.FC<Props> = ({
   const currentFighter = gameState?.players.find(p => p.fighter.id === fighter.id)?.fighter || fighter;
 
   /** ----------------------------------------------------------
-   * 1. LOAD BASE MODEL (GLB format - optimized with gltf-transform)
-   * Draco compression + WebP textures: 21MB → 535KB (97.5% smaller!)
+   * 1. LOAD BASE MODEL (One time, never swapped)
    * ---------------------------------------------------------- */
-  const baseGLTF = useGLTF(`${basePath}_base.opt.glb`);
-  const base = useMemo(() => baseGLTF.scene.clone(true), [baseGLTF]);
+  const base = useFBX(`${basePath}_base.fbx`);
 
   /** ----------------------------------------------------------
    * 2. LOAD ALL ANIMATION CLIPS
@@ -93,6 +91,13 @@ const FighterFBXAnimated: React.FC<Props> = ({
    * ---------------------------------------------------------- */
   const { actions } = useAnimations(animations, groupRef);
 
+  // Debug: Log available animations once
+  useEffect(() => {
+    if (actions && Object.keys(actions).length > 0) {
+      console.log(`Available animations for ${fighter.name}:`, Object.keys(actions));
+    }
+  }, [actions, fighter.name]);
+
 
   /** ----------------------------------------------------------
    * 4. Decide which anim to play
@@ -129,10 +134,13 @@ const FighterFBXAnimated: React.FC<Props> = ({
 
 
   /** ----------------------------------------------------------
-   * 5. Play animation (clean fade)
+   * 5. Play animation (clean fade with loop)
    * ---------------------------------------------------------- */
   useEffect(() => {
-    if (!actions || !actions[currentAnim]) return;
+    if (!actions || !actions[currentAnim]) {
+      console.warn(`Animation "${currentAnim}" not found for fighter ${fighter.id}`);
+      return;
+    }
 
     // Stop all other animations
     Object.values(actions).forEach((action) => {
@@ -141,13 +149,18 @@ const FighterFBXAnimated: React.FC<Props> = ({
       }
     });
 
-    // Play the current animation
+    // Play the current animation with loop
     const action = actions[currentAnim];
     if (action) {
-      action.reset().fadeIn(0.25).play();
+      action.reset()
+        .setLoop(THREE.LoopRepeat, Infinity)  // Loop forever
+        .fadeIn(0.25)
+        .play();
+      
+      console.log(`Playing animation: ${currentAnim} for fighter ${fighter.id}`);
     }
 
-  }, [currentAnim, actions]);
+  }, [currentAnim, actions, fighter.id]);
 
 
   /** ----------------------------------------------------------
@@ -158,18 +171,24 @@ const FighterFBXAnimated: React.FC<Props> = ({
 
     base.scale.set(scale, scale, scale);
 
-    // Material fix
+    // Much brighter material - lighter base color and better light response
     base.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         const mat = new THREE.MeshStandardMaterial({
-          color: "#8B7355",
-          roughness: 0.8,
+          color: "#ffffff",        // Bright white base color instead of dark brown
+          roughness: 0.4,          // Smoother surface = more light reflection
+          metalness: 0.05,         // Slight metallic sheen
+          emissive: "#444444",     // Self-illumination for brightness
+          emissiveIntensity: 0.3,  // Adds extra brightness
         });
         const oldMaterial = child.material as THREE.MeshStandardMaterial;
         if (oldMaterial?.map) {
           mat.map = oldMaterial.map;
+          mat.needsUpdate = true;
         }
         child.material = mat;
+        child.castShadow = true;
+        child.receiveShadow = true;
       }
     });
 
@@ -186,12 +205,21 @@ const FighterFBXAnimated: React.FC<Props> = ({
 
 
   /** ----------------------------------------------------------
-   * 8. Idle Wiggle
+   * 8. Face opponent and idle wiggle
    * ---------------------------------------------------------- */
   useFrame((state) => {
-    if (isActive && groupRef.current) {
-      groupRef.current.rotation.y =
-        Math.sin(state.clock.getElapsedTime() * 0.3) * 0.1;
+    if (!groupRef.current) return;
+    
+    // Determine base rotation to face opponent
+    // Fighter on left (x < 0) faces right (+90°)
+    // Fighter on right (x > 0) faces left (-90°)
+    const baseRotation = fighter.position.x < 0 ? Math.PI / 2 : -Math.PI / 2;
+    
+    // Add subtle wiggle for active fighter
+    if (isActive) {
+      groupRef.current.rotation.y = baseRotation + Math.sin(state.clock.getElapsedTime() * 0.3) * 0.1;
+    } else {
+      groupRef.current.rotation.y = baseRotation;
     }
   });
 
@@ -206,14 +234,60 @@ const FighterFBXAnimated: React.FC<Props> = ({
   // Safety check
   if (!base) return null;
 
+  // Position adjustment - Ninja needs to be slightly higher than Ortiz
+  const groundOffset = fighter.id === 'fighter2' ? -0.4 : -0.8; // fighter2 = Ninja
+
   return (
-    <group position={[fighter.position.x, fighter.position.y, fighter.position.z]}>
+    <group position={[fighter.position.x, fighter.position.y + groundOffset, fighter.position.z]}>
+      
+      {/* FIGHTER LIGHTING - follows the fighter */}
+      {/* Front key light */}
+      <spotLight
+        position={[0, 8, 8]}
+        angle={0.6}
+        penumbra={0.5}
+        intensity={1.2}
+        color="#ffffff"
+        castShadow
+        target-position={[0, 4, 0]}
+      />
+      
+      {/* Back rim light - creates outline */}
+      <pointLight
+        position={[0, 6, -4]}
+        intensity={0.8}
+        distance={12}
+        color="#ffaa66"
+      />
+      
+      {/* Side fill lights - reduces harsh shadows */}
+      <pointLight
+        position={[-4, 5, 0]}
+        intensity={0.5}
+        distance={10}
+        color="#add8e6"
+      />
+      <pointLight
+        position={[4, 5, 0]}
+        intensity={0.5}
+        distance={10}
+        color="#add8e6"
+      />
+      
+      {/* Active fighter glow */}
+      {isActive && (
+        <pointLight
+          position={[0, 1, 0]}
+          intensity={0.8}
+          distance={8}
+          color="#00ff88"
+        />
+      )}
       
       {/* BASE MODEL */}
       <group
         ref={groupRef}
         position={[0, yOffset, 0]}
-        scale={[scale, scale, scale]}
         onPointerOver={() => hoverFighter(fighter.id)}
         onPointerOut={() => hoverFighter(null)}
       >

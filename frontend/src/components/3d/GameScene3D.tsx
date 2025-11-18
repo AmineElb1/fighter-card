@@ -85,40 +85,99 @@ const GameScene3D: React.FC<GameScene3DProps> = ({
           near: 0.1,
           far: 1000
         }}
-        shadows
+        shadows="soft"  // Softer, more realistic shadows
+        gl={{ 
+          antialias: true,
+          alpha: false,
+          powerPreference: "high-performance"
+        }}
         style={{ height: '100vh', width: '100%' }}
       >
 
-        {/* Global Lighting */}
+        {/* Enhanced Lighting Setup */}
+        
+        {/* Ambient - soft overall illumination */}
         <ambientLight 
-          color={gameState.arena.lighting.ambientColor} 
-          intensity={gameState.arena.lighting.ambientIntensity} 
+          color="#ffffff" 
+          intensity={0.4} 
         />
-        <directionalLight
-          position={[
-            gameState.arena.lighting.directionalPosition.x,
-            gameState.arena.lighting.directionalPosition.y,
-            gameState.arena.lighting.directionalPosition.z
-          ]}
-          color={gameState.arena.lighting.directionalColor}
-          intensity={gameState.arena.lighting.directionalIntensity}
-          castShadow={gameState.arena.lighting.shadows}
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
-          shadow-camera-far={50}
-          shadow-camera-left={-20}
-          shadow-camera-right={20}
-          shadow-camera-top={20}
-          shadow-camera-bottom={-20}
+        
+        {/* Hemisphere Light - sky/ground gradient for natural feel */}
+        <hemisphereLight
+          color="#87ceeb"    // sky color
+          groundColor="#8b4513"  // ground color
+          intensity={0.6}
+          position={[0, 50, 0]}
         />
 
+        {/* Main Directional Light (Sun) - primary shadows */}
+        <directionalLight
+          position={[10, 20, 10]}
+          color="#fff5e6"
+          intensity={1.2}
+          castShadow
+          shadow-mapSize-width={4096}
+          shadow-mapSize-height={4096}
+          shadow-camera-far={100}
+          shadow-camera-left={-30}
+          shadow-camera-right={30}
+          shadow-camera-top={30}
+          shadow-camera-bottom={-30}
+          shadow-bias={-0.0001}
+        />
+
+        {/* Rim Light - highlights fighters from behind */}
+        <directionalLight
+          position={[-5, 8, -10]}
+          color="#ffa500"
+          intensity={0.5}
+        />
+
+        {/* Fill Light - softens shadows */}
+        <directionalLight
+          position={[-10, 5, 5]}
+          color="#add8e6"
+          intensity={0.3}
+        />
+
+        {/* Spot Lights on fighters - dramatic effect */}
+        <spotLight
+          position={[-10, 15, 0]}
+          angle={0.5}
+          penumbra={0.5}
+          intensity={0.8}
+          color="#ffffff"
+          castShadow
+          shadow-mapSize-width={2048}
+          shadow-mapSize-height={2048}
+        />
+        
+        <spotLight
+          position={[10, 15, 0]}
+          angle={0.5}
+          penumbra={0.5}
+          intensity={0.8}
+          color="#ffffff"
+          castShadow
+          shadow-mapSize-width={2048}
+          shadow-mapSize-height={2048}
+        />
+
+        {/* Point Lights for atmosphere - subtle glow */}
+        <pointLight position={[0, 5, -15]} color="#ff6b6b" intensity={0.3} distance={20} />
+        <pointLight position={[0, 5, 15]} color="#4ecdc4" intensity={0.3} distance={20} />
+
         <Suspense fallback={null}>
-          {/* Sky background - no HDR needed, faster loading */}
+          {/* Enhanced Sky - dramatic sunset effect */}
           <Sky 
             distance={450000}
-            sunPosition={[10, 10, 5]}
-            inclination={0}
-            azimuth={0.25}
+            sunPosition={[100, 20, 100]}  // Higher sun position for better lighting
+            inclination={0.6}  // More dramatic angle
+            azimuth={0.15}  // Adjust rotation
+            turbidity={8}  // Atmospheric thickness
+            rayleigh={2}  // Sky color intensity
+            mieCoefficient={0.005}  // Haze amount
+            mieDirectionalG={0.8}  // Sun glow
           />
         </Suspense>
 

@@ -11,21 +11,18 @@ interface UsePreloadAssetsReturn {
  * Custom hook to preload all 3D assets
  * Returns progress (0-100) and loading status
  */
-// ✅ LAZY LOADING STRATEGY + ULTRA-COMPRESSED GLB BASE MODELS
-// Only preload ESSENTIAL assets (optimized GLB base + idle FBX) during loading screen
+// ✅ LAZY LOADING STRATEGY
+// Only preload ESSENTIAL assets (base + idle) during loading screen
 // Other animations (punch, kick, block, victory, defeat) are loaded on-demand during gameplay
-// Base models optimized with gltf-transform (Draco + WebP textures):
-//   - Ortiz: 41MB FBX → 535KB GLB (98.7% reduction!)
-//   - Ninja: 51MB FBX → 535KB GLB (99% reduction!)
-// Total initial load: ~42MB (idle FBX) + 1MB (base GLB) = ~43MB vs 685MB (16x faster!)
+// This reduces initial load from 685MB to ~82MB (8x faster!)
 
 const ortizEssentialAssets = [
-  { path: '/models/fighters/ortiz/ortiz_base.opt.glb', type: 'gltf' },
+  { path: '/models/fighters/ortiz/ortiz_base.fbx', type: 'fbx' },
   { path: '/models/fighters/ortiz/ortiz_idle.fbx', type: 'fbx' },
 ];
 
 const ninjaEssentialAssets = [
-  { path: '/models/fighters/ninja/ninja_base.opt.glb', type: 'gltf' },
+  { path: '/models/fighters/ninja/ninja_base.fbx', type: 'fbx' },
   { path: '/models/fighters/ninja/ninja_idle.fbx', type: 'fbx' },
 ];
 
@@ -132,18 +129,16 @@ export const usePreloadAssets = (): UsePreloadAssetsReturn => {
 /**
  * Preload component to trigger asset loading
  * Must be inside Canvas or Suspense boundary
- * 🚀 ULTRA-OPTIMIZED LOADING: Uses gltf-transform optimized GLB base models
- * Base models: 535KB each (was 41-51MB FBX!)
- * Draco compression + WebP textures = 98% size reduction
+ * 🚀 LAZY LOADING: Only loads essential assets (base + idle FBX)
  * Other animations are loaded on-demand by FighterFBXAnimated component
  */
 export const PreloadAssets: React.FC = () => {
-  // Ortiz - Ultra-compressed GLB base (535KB) + FBX idle
-  useGLTF('/models/fighters/ortiz/ortiz_base.opt.glb');
+  // Ortiz - Base + Idle FBX
+  useFBX('/models/fighters/ortiz/ortiz_base.fbx');
   useFBX('/models/fighters/ortiz/ortiz_idle.fbx');
 
-  // Ninja - Ultra-compressed GLB base (535KB) + FBX idle
-  useGLTF('/models/fighters/ninja/ninja_base.opt.glb');
+  // Ninja - Base + Idle FBX
+  useFBX('/models/fighters/ninja/ninja_base.fbx');
   useFBX('/models/fighters/ninja/ninja_idle.fbx');
 
   // Arena
