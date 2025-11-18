@@ -41,54 +41,69 @@ const totalAssets = ortizAssets.length + ninjaAssets.length + arenaAssets.length
 export const usePreloadAssets = (): UsePreloadAssetsReturn => {
   const [progress, setProgress] = useState(0);
   const [loadingStage, setLoadingStage] = useState('Initializing...');
-
-  // Preload all FBX files
-  ortizAssets.forEach(path => useFBX.preload(path));
-  ninjaAssets.forEach(path => useFBX.preload(path));
-  
-  // Preload GLB files
-  arenaAssets.forEach(path => useGLTF.preload(path));
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     let mounted = true;
-    let currentLoaded = 0;
+    let loadedCount = 0;
 
     const updateProgress = (stage: string) => {
       if (!mounted) return;
-      currentLoaded++;
-      const newProgress = Math.floor((currentLoaded / totalAssets) * 100);
+      loadedCount++;
+      const newProgress = Math.floor((loadedCount / totalAssets) * 100);
       setProgress(newProgress);
       setLoadingStage(stage);
     };
 
-    // Simulate loading stages for user feedback
+    // REAL asset loading with promises
     const loadAssets = async () => {
-      // Stage 1: Ortiz Fighter
-      setLoadingStage('Loading Fighter: Ortiz...');
-      await new Promise(resolve => setTimeout(resolve, 100));
-      ortizAssets.forEach((_, index) => {
-        setTimeout(() => updateProgress(`Loading Ortiz animations... (${index + 1}/${ortizAssets.length})`), index * 150);
-      });
+      try {
+        setLoadingStage('🥊 Loading Fighter: Ortiz...');
+        
+        // Load Ortiz assets one by one
+        for (let i = 0; i < ortizAssets.length; i++) {
+          await useFBX.preload(ortizAssets[i]);
+          updateProgress(`Loading Ortiz animations... (${i + 1}/${ortizAssets.length})`);
+          await new Promise(resolve => setTimeout(resolve, 100)); // Small delay for UX
+        }
 
-      // Stage 2: Ninja Fighter
-      await new Promise(resolve => setTimeout(resolve, ortizAssets.length * 150));
-      setLoadingStage('Loading Fighter: Ninja...');
-      ninjaAssets.forEach((_, index) => {
-        setTimeout(() => updateProgress(`Loading Ninja animations... (${index + 1}/${ninjaAssets.length})`), (ortizAssets.length + index) * 150);
-      });
+        if (!mounted) return;
+        setLoadingStage('🥷 Loading Fighter: Ninja...');
+        
+        // Load Ninja assets one by one
+        for (let i = 0; i < ninjaAssets.length; i++) {
+          await useFBX.preload(ninjaAssets[i]);
+          updateProgress(`Loading Ninja animations... (${i + 1}/${ninjaAssets.length})`);
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
 
-      // Stage 3: Arena
-      await new Promise(resolve => setTimeout(resolve, (ortizAssets.length + ninjaAssets.length) * 150));
-      setLoadingStage('Loading Combat Arena...');
-      arenaAssets.forEach((_, index) => {
-        setTimeout(() => updateProgress('Finalizing arena...'), (ortizAssets.length + ninjaAssets.length + index) * 150);
-      });
+        if (!mounted) return;
+        setLoadingStage('🏟️ Loading Combat Arena...');
+        
+        // Load Arena assets
+        for (let i = 0; i < arenaAssets.length; i++) {
+          await useGLTF.preload(arenaAssets[i]);
+          updateProgress('Finalizing arena...');
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
 
-      // Stage 4: Complete
-      await new Promise(resolve => setTimeout(resolve, totalAssets * 150 + 500));
-      if (mounted) {
-        setProgress(100);
-        setLoadingStage('Ready!');
+        // Extra time for texture/material loading
+        if (!mounted) return;
+        setLoadingStage('✨ Preparing shaders and materials...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        if (mounted) {
+          setProgress(100);
+          setLoadingStage('🎮 Ready to fight!');
+          setIsLoaded(true);
+        }
+      } catch (error) {
+        console.error('❌ Error loading assets:', error);
+        if (mounted) {
+          setLoadingStage('⚠️ Some assets failed to load. Starting anyway...');
+          setProgress(100);
+          setIsLoaded(true);
+        }
       }
     };
 
@@ -101,7 +116,7 @@ export const usePreloadAssets = (): UsePreloadAssetsReturn => {
 
   return {
     progress,
-    isLoaded: progress === 100,
+    isLoaded,
     loadingStage
   };
 };
