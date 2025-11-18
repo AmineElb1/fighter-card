@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Environment, Sky, Grid } from '@react-three/drei';
+import { OrbitControls, Sky, Grid } from '@react-three/drei';
 import { Physics } from '@react-three/cannon';
 import { Vector3 } from 'three';
 
@@ -113,7 +113,7 @@ const GameScene3D: React.FC<GameScene3DProps> = ({
         />
 
         <Suspense fallback={null}>
-          <Environment preset="sunset" />
+          {/* Sky background - no HDR needed, faster loading */}
           <Sky 
             distance={450000}
             sunPosition={[10, 10, 5]}
