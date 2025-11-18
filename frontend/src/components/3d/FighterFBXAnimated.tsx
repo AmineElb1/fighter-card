@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Text, Box, useFBX, useAnimations } from "@react-three/drei";
+import { Text, Box, useFBX, useGLTF, useAnimations } from "@react-three/drei";
 import * as THREE from "three";
 import useGameStore from "../../store/gameStore";
 import type { Fighter3D as Fighter3DType } from "../../types/game";
@@ -39,9 +39,11 @@ const FighterFBXAnimated: React.FC<Props> = ({
   const currentFighter = gameState?.players.find(p => p.fighter.id === fighter.id)?.fighter || fighter;
 
   /** ----------------------------------------------------------
-   * 1. LOAD BASE MODEL (One time, never swapped)
+   * 1. LOAD BASE MODEL (GLB format - optimized with gltf-transform)
+   * Draco compression + WebP textures: 21MB → 535KB (97.5% smaller!)
    * ---------------------------------------------------------- */
-  const base = useFBX(`${basePath}_base.fbx`);
+  const baseGLTF = useGLTF(`${basePath}_base.opt.glb`);
+  const base = useMemo(() => baseGLTF.scene.clone(true), [baseGLTF]);
 
   /** ----------------------------------------------------------
    * 2. LOAD ALL ANIMATION CLIPS
