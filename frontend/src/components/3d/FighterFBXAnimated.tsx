@@ -213,6 +213,7 @@ const FighterFBXAnimated: React.FC<Props> = ({
       <group
         ref={groupRef}
         position={[0, yOffset, 0]}
+        scale={[scale, scale, scale]}
         onPointerOver={() => hoverFighter(fighter.id)}
         onPointerOut={() => hoverFighter(null)}
       >
