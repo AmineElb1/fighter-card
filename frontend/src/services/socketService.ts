@@ -13,7 +13,10 @@ import type {
   ChatMessageEvent,
 } from '../types/socket';
 
-const SOCKET_URL = 'http://localhost:3001';
+// Use environment variable or fallback to production URL
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'https://fighter-card.onrender.com';
+
+console.log('🌐 Connecting to backend:', SOCKET_URL);
 
 class SocketService {
   private socket: Socket | null = null;

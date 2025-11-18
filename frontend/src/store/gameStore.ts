@@ -66,6 +66,7 @@ interface GameStore {
   setGamePhase: (phase: GamePhase) => void;
   nextTurn: () => void;
   endTurn: () => void; // New: properly end a turn and switch players
+  botPlayTurn: () => void; // Bot AI: automatically play a turn
   restartGame: () => void; // Restart the game with full health
 }
 
@@ -493,30 +494,69 @@ const useGameStore = create<GameStore>((set, get) => ({
       }
       
     } else if (action.type === 'defend' && action.card && action.damage !== undefined) {
-      // DEFENSE CARD: Set up defense for next incoming attack
+      // DEFENSE CARD: Heal 15 HP (max 100) + Set up defense for next incoming attack
       const sourcePlayer = gameState.players.find(p => p.fighter.id === action.source);
       
       if (sourcePlayer) {
         // Trigger defense animation
         setFighterAnimation(action.source, action.card.castAnimation);
         
-        // Store defense amount for this fighter
-        set((state) => ({
-          defendingFighters: {
-            ...state.defendingFighters,
-            [action.source]: action.damage || 0 // For defense cards, damage = defense amount
-          }
-        }));
+        // In multiplayer: Only the active player heals
+        const isMyAction = !isMultiplayer || (gameState.activePlayer === myPlayerId);
         
-        // Remove processed action for defense
-        set({
-          gameState: {
-            ...gameState,
-            combatActions: gameState.combatActions.slice(1)
-          }
-        });
-        
-        console.log(`🛡️ ${sourcePlayer.fighter.name} is defending (blocks ${action.damage} damage)!`);
+        if (isMyAction) {
+          // Heal the fighter (15 HP, max 100)
+          const healAmount = 15;
+          const oldHealth = sourcePlayer.fighter.health;
+          const newHealth = Math.min(100, sourcePlayer.fighter.health + healAmount);
+          const actualHeal = newHealth - oldHealth;
+          
+          console.log(`💚 ${sourcePlayer.fighter.name} heals: ${oldHealth} → ${newHealth} (+${actualHeal} HP)`);
+          
+          // Update fighter health
+          const updatedPlayers = gameState.players.map(player => {
+            if (player.fighter.id === action.source) {
+              return {
+                ...player,
+                fighter: {
+                  ...player.fighter,
+                  health: newHealth
+                }
+              };
+            }
+            return player;
+          });
+          
+          // Store defense amount for this fighter + update health
+          set((state) => ({
+            defendingFighters: {
+              ...state.defendingFighters,
+              [action.source]: action.damage || 0 // For defense cards, damage = defense amount
+            },
+            gameState: state.gameState ? {
+              ...state.gameState,
+              players: updatedPlayers,
+              combatActions: state.gameState.combatActions.slice(1)
+            } : null
+          }));
+          
+          console.log(`🛡️ ${sourcePlayer.fighter.name} is defending (blocks ${action.damage} damage)!`);
+        } else {
+          // Opponent's defense - just skip, will get health from gameStateUpdate
+          console.log(`👀 Skipping defense heal (opponent action - will sync from gameStateUpdate)`);
+          
+          // Store defense amount without healing
+          set((state) => ({
+            defendingFighters: {
+              ...state.defendingFighters,
+              [action.source]: action.damage || 0
+            },
+            gameState: state.gameState ? {
+              ...state.gameState,
+              combatActions: state.gameState.combatActions.slice(1)
+            } : null
+          }));
+        }
         
         // Reset animation after duration
         setTimeout(() => {
@@ -615,6 +655,60 @@ const useGameStore = create<GameStore>((set, get) => ({
         turnTimer: 30
       }
     });
+
+    // In solo mode, if it's bot's turn (player2), trigger bot AI
+    const { isMultiplayer } = get();
+    if (!isMultiplayer && nextPlayer.id === 'player2' && nextPlayer.name.includes('Bot')) {
+      console.log('🤖 Bot turn detected - triggering AI in 1.5 seconds...');
+      setTimeout(() => {
+        get().botPlayTurn();
+      }, 1500); // Wait 1.5 seconds before bot plays
+    }
+  },
+
+  // Bot AI: Automatically play a turn for the bot
+  botPlayTurn: () => {
+    const { gameState, selectCard, playCard } = get();
+    if (!gameState) return;
+
+    // Make sure it's actually the bot's turn
+    const activePlayer = gameState.players.find(p => p.id === gameState.activePlayer);
+    if (!activePlayer || activePlayer.id !== 'player2') {
+      console.log('⚠️ Bot AI called but not bot\'s turn');
+      return;
+    }
+
+    console.log('🤖 Bot is thinking...');
+
+    // Get bot's available cards
+    const botDeck = activePlayer.fighter.deck;
+    if (!botDeck || botDeck.length === 0) {
+      console.log('⚠️ Bot has no cards!');
+      return;
+    }
+
+    // Simple AI: Pick a random card
+    const randomCard = botDeck[Math.floor(Math.random() * botDeck.length)];
+    console.log('🤖 Bot selected:', randomCard.name);
+
+    // Select the card
+    selectCard(randomCard.id);
+
+    // Wait a bit then play the card
+    setTimeout(() => {
+      // Determine target based on card type
+      const opponent = gameState.players.find(p => p.id !== activePlayer.id);
+      if (!opponent) return;
+
+      const targetId = randomCard.type === 'attack' 
+        ? opponent.fighter.id  // Attack opponent
+        : activePlayer.fighter.id; // Defend self
+
+      console.log('🤖 Bot plays:', randomCard.name, 'targeting:', randomCard.type === 'attack' ? 'opponent' : 'self');
+      
+      // Play the card
+      playCard(randomCard.id, targetId);
+    }, 1000); // Wait 1 second after selecting
   },
 
   // Restart game: reset all fighters to full health and start over

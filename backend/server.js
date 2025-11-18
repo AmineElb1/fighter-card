@@ -6,16 +6,58 @@ import cors from 'cors';
 const app = express();
 const httpServer = createServer(app);
 
-// Configure CORS
+// Configure CORS - allow both localhost and production frontend
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'https://your-frontend-domain.com', // Update this with your actual frontend URL
+  /https:\/\/.*\.vercel\.app$/, // Allow all Vercel preview URLs
+  /https:\/\/.*\.netlify\.app$/, // Allow all Netlify preview URLs
+];
+
 app.use(cors({
-  origin: 'http://localhost:5174', // Vite frontend URL
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or Postman)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is allowed
+    const isAllowed = allowedOrigins.some(allowedOrigin => {
+      if (typeof allowedOrigin === 'string') {
+        return origin === allowedOrigin;
+      }
+      return allowedOrigin.test(origin);
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.log('⚠️ Blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 
 // Socket.io server with CORS
 const io = new Server(httpServer, {
   cors: {
-    origin: 'http://localhost:5174',
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      
+      const isAllowed = allowedOrigins.some(allowedOrigin => {
+        if (typeof allowedOrigin === 'string') {
+          return origin === allowedOrigin;
+        }
+        return allowedOrigin.test(origin);
+      });
+      
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        console.log('⚠️ Blocked Socket.IO origin:', origin);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: ['GET', 'POST'],
     credentials: true
   }
