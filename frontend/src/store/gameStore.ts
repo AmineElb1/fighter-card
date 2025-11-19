@@ -45,7 +45,7 @@ interface GameStore {
   defendingFighters: Record<string, number>; // fighterId -> defense amount
   
   // Actions
-  initializeGame: (gameId: string) => void;
+  initializeGame: (gameId: string, selectedFighters?: { player1: string; player2: string } | null) => void;
   selectCard: (cardId: string | null) => void;
   hoverFighter: (fighterId: string | null) => void;
   playCard: (cardId: string, targetId?: string) => void;
@@ -95,8 +95,40 @@ const useGameStore = create<GameStore>((set, get) => ({
   defendingFighters: {}, // Track defense state for each fighter
 
   // Game Initialization
-  initializeGame: (gameId: string) => {
+  initializeGame: (gameId: string, selectedFighters?: { player1: string; player2: string } | null) => {
     set({ isLoading: true, error: null });
+    
+    // Determine which fighters to use
+    const p1FighterId = selectedFighters?.player1 || 'ninja';
+    const p2FighterId = selectedFighters?.player2 || 'ortiz';
+    
+    // Map fighter IDs to their data
+    const getFighterData = (fighterId: string, playerId: string) => {
+      const fighterMap: Record<string, { name: string; element: ElementType; id: string }> = {
+        'ninja': { name: 'Ninja', element: ElementType.NEUTRAL, id: 'fighter1' },
+        'ortiz': { name: 'Ortiz', element: ElementType.NEUTRAL, id: 'fighter2' },
+        'boss': { name: 'Boss', element: ElementType.NEUTRAL, id: 'fighter3' },
+        'steve': { name: 'Steve', element: ElementType.NEUTRAL, id: 'fighter4' },
+      };
+      
+      const data = fighterMap[fighterId] || fighterMap['ninja'];
+      const position = playerId === 'player1' ? new Vector3(-5, 3, 0) : new Vector3(5, 3, 0);
+      
+      console.log(`🎮 Fighter Selection: ${fighterId} → ${data.name} (${data.id})`);
+      
+      return {
+        id: data.id,
+        name: data.name,
+        element: data.element,
+        position
+      };
+    };
+    
+    const p1Data = getFighterData(p1FighterId, 'player1');
+    const p2Data = getFighterData(p2FighterId, 'player2');
+    
+    console.log('🥊 Player 1:', p1Data);
+    console.log('🥊 Player 2:', p2Data);
     
     // Create mock game state for development
     const mockGameState: GameState3D = {
@@ -109,25 +141,15 @@ const useGameStore = create<GameStore>((set, get) => ({
           id: 'player1',
           name: 'Player 1',
           avatar: '/avatars/player1.png',
-          fighter: get().createFighter({
-            id: 'fighter1',
-            name: 'Ortiz',
-            element: ElementType.FIRE,
-            position: new Vector3(-5, 3, 0), // Ring base position
-          }),
+          fighter: get().createFighter(p1Data),
           isReady: false,
           wins: 0
         },
         {
           id: 'player2',
-          name: 'Steve (Bot)',
+          name: `${p2Data.name} (Bot)`,
           avatar: '/avatars/player2.png',
-          fighter: get().createFighter({
-            id: 'fighter2',
-            name: 'Steve',
-            element: ElementType.EARTH,
-            position: new Vector3(5, 3, 0), // Ring base position (tegenover Ortiz)
-          }),
+          fighter: get().createFighter(p2Data),
           isReady: false,
           wins: 0
         }
@@ -825,8 +847,8 @@ function createFighterDeck(fighterName: string, element: ElementType): MoveCard3
     }));
   }
 
-  // Steve (Ninja)'s deck (Earth element)
-  if (fighterName === 'Steve') {
+  // Ninja's deck
+  if (fighterName === 'Ninja') {
     const ninjaCards: Omit<MoveCard3D, 'id' | 'element' | 'glowColor'>[] = [
       {
         name: 'Shadow Punch',
@@ -881,6 +903,128 @@ function createFighterDeck(fighterName: string, element: ElementType): MoveCard3
     return ninjaCards.map((card, index) => ({
       ...card,
       id: `ninja_card_${index}`,
+      element,
+      glowColor
+    }));
+  }
+
+  // Boss's deck
+  if (fighterName === 'Boss') {
+    const bossCards: Omit<MoveCard3D, 'id' | 'element' | 'glowColor'>[] = [
+      {
+        name: 'Boss Punch',
+        description: 'A powerful boss strike',
+        type: 'attack',
+        damage: 20,
+        staminaCost: 10,
+        cooldown: 0,
+        rarity: CardRarity.COMMON,
+        castAnimation: 'punch',
+        impactAnimation: 'hit',
+        particleEffect: 'sparks',
+        soundEffect: 'punch-hit',
+        cardTexture: '/bossPunch.png',
+        cardPosition: new Vector3(0, 0, 0),
+        cardRotation: new Vector3(0, 0, 0)
+      },
+      {
+        name: 'Boss Kick',
+        description: 'A devastating boss kick',
+        type: 'attack',
+        damage: 35,
+        staminaCost: 20,
+        cooldown: 0,
+        rarity: CardRarity.UNCOMMON,
+        castAnimation: 'kick',
+        impactAnimation: 'heavy-hit',
+        particleEffect: 'energy-burst',
+        soundEffect: 'kick-impact',
+        cardTexture: '/bossKick.png',
+        cardPosition: new Vector3(0, 0, 0),
+        cardRotation: new Vector3(0, 0, 0)
+      },
+      {
+        name: 'Boss Guard',
+        description: 'Block with superior defense',
+        type: 'defense',
+        damage: 15,
+        staminaCost: 10,
+        cooldown: 0,
+        rarity: CardRarity.COMMON,
+        castAnimation: 'block',
+        impactAnimation: 'block',
+        particleEffect: 'shield',
+        soundEffect: 'block-sound',
+        cardTexture: '/bossDefence.png',
+        cardPosition: new Vector3(0, 0, 0),
+        cardRotation: new Vector3(0, 0, 0)
+      }
+    ];
+
+    return bossCards.map((card, index) => ({
+      ...card,
+      id: `boss_card_${index}`,
+      element,
+      glowColor
+    }));
+  }
+
+  // Steve's deck
+  if (fighterName === 'Steve') {
+    const steveCards: Omit<MoveCard3D, 'id' | 'element' | 'glowColor'>[] = [
+      {
+        name: 'Swift Strike',
+        description: 'A lightning-fast punch',
+        type: 'attack',
+        damage: 20,
+        staminaCost: 10,
+        cooldown: 0,
+        rarity: CardRarity.COMMON,
+        castAnimation: 'punch',
+        impactAnimation: 'hit',
+        particleEffect: 'sparks',
+        soundEffect: 'punch-hit',
+        cardTexture: '/stevePunch.png',
+        cardPosition: new Vector3(0, 0, 0),
+        cardRotation: new Vector3(0, 0, 0)
+      },
+      {
+        name: 'Blazing Kick',
+        description: 'An explosive kick attack',
+        type: 'attack',
+        damage: 35,
+        staminaCost: 20,
+        cooldown: 0,
+        rarity: CardRarity.UNCOMMON,
+        castAnimation: 'kick',
+        impactAnimation: 'heavy-hit',
+        particleEffect: 'energy-burst',
+        soundEffect: 'kick-impact',
+        cardTexture: '/steveKick.png',
+        cardPosition: new Vector3(0, 0, 0),
+        cardRotation: new Vector3(0, 0, 0)
+      },
+      {
+        name: 'Steel Defense',
+        description: 'Block with impenetrable defense',
+        type: 'defense',
+        damage: 15,
+        staminaCost: 10,
+        cooldown: 0,
+        rarity: CardRarity.COMMON,
+        castAnimation: 'block',
+        impactAnimation: 'block',
+        particleEffect: 'shield',
+        soundEffect: 'block-sound',
+        cardTexture: '/steveDefence.png',
+        cardPosition: new Vector3(0, 0, 0),
+        cardRotation: new Vector3(0, 0, 0)
+      }
+    ];
+
+    return steveCards.map((card, index) => ({
+      ...card,
+      id: `steve_card_${index}`,
       element,
       glowColor
     }));

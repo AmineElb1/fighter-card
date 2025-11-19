@@ -19,13 +19,15 @@ interface GameScene3DProps {
   onReturnToMenu?: () => void;
   gameMode?: 'solo' | 'multiplayer';
   multiplayerData?: { roomId: string; playerId: string } | null;
+  selectedFighters?: { player1: string; player2: string } | null;
 }
 
 const GameScene3D: React.FC<GameScene3DProps> = ({ 
   gameId = 'game-1', 
   onReturnToMenu,
   gameMode = 'solo',
-  multiplayerData = null 
+  multiplayerData = null,
+  selectedFighters = null
 }) => {
   const { 
     gameState, 
@@ -50,9 +52,9 @@ const GameScene3D: React.FC<GameScene3DProps> = ({
 
   useEffect(() => {
     if (!gameState) {
-      initializeGame(gameId);
+      initializeGame(gameId, selectedFighters);
     }
-  }, [gameId, gameState, initializeGame]);
+  }, [gameId, gameState, initializeGame, selectedFighters]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -193,9 +195,27 @@ const GameScene3D: React.FC<GameScene3DProps> = ({
           {gameState.players.map((player) => {
             const isActivePlayer = player.id === gameState.activePlayer;
             const fighter = player.fighter;
+            
+            console.log(`🎭 Rendering fighter: ${fighter.name} (ID: ${fighter.id})`);
 
-            /** Ortiz (fighter1) */
+            /** Ninja (fighter1) */
             if (fighter.id === 'fighter1') {
+              console.log('✅ Loading Ninja with Ninja model');
+              return (
+                <Suspense key={fighter.id} fallback={<LoadingBox message="Loading Ninja..." />}>
+                  <FighterFBXAnimated
+                    fighter={fighter}
+                    isActive={isActivePlayer}
+                    basePath="/models/fighters/ninja/ninja"
+                    scale={0.04}
+                  />
+                </Suspense>
+              );
+            }
+
+            /** Ortiz (fighter2) */
+            if (fighter.id === 'fighter2') {
+              console.log('✅ Loading Ortiz model');
               return (
                 <Suspense key={fighter.id} fallback={<LoadingBox message="Loading Ortiz..." />}>
                   <FighterFBXAnimated
@@ -208,21 +228,37 @@ const GameScene3D: React.FC<GameScene3DProps> = ({
               );
             }
 
-            /** Steve is nu NINJA → fighter2 */
-            if (fighter.id === 'fighter2') {
+            /** Boss (fighter3) */
+            if (fighter.id === 'fighter3') {
               return (
-                <Suspense key={fighter.id} fallback={<LoadingBox message="Loading Ninja..." />}>
+                <Suspense key={fighter.id} fallback={<LoadingBox message="Loading Boss..." />}>
                   <FighterFBXAnimated
                     fighter={fighter}
                     isActive={isActivePlayer}
-                    basePath="/models/fighters/ninja/ninja"
-                    scale={0.04}    // zelfde scale als Ortiz, werkt perfect
+                    basePath="/models/fighters/boss/boss"
+                    scale={0.04}
+                  />
+                </Suspense>
+              );
+            }
+
+            /** Steve (fighter4) */
+            if (fighter.id === 'fighter4') {
+              console.log('✅ Loading Steve model');
+              return (
+                <Suspense key={fighter.id} fallback={<LoadingBox message="Loading Steve..." />}>
+                  <FighterFBXAnimated
+                    fighter={fighter}
+                    isActive={isActivePlayer}
+                    basePath="/models/fighters/steve/steve"
+                    scale={0.04}
                   />
                 </Suspense>
               );
             }
 
             /** Default placeholder */
+            console.warn(`⚠️ Unknown fighter ID: ${fighter.id}, using default`);
             return (
               <Suspense key={fighter.id} fallback={<LoadingBox message="Loading fighter..." />}>
                 <Fighter3D fighter={fighter} isActive={isActivePlayer} />

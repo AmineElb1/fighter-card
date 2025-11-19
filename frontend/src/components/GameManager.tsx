@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import StartMenu from './screens/StartMenu';
 import LoadingScreen from './screens/LoadingScreen';
 import MultiplayerLobby from './screens/MultiplayerLobby';
+import FighterSelection from './screens/FighterSelection';
 import GameScene3D from './3d/GameScene3D';
 
 type GameScreen = 'START_MENU' | 'LOADING' | 'MULTIPLAYER_LOBBY' | 'FIGHTER_SELECTION' | 'COMBAT' | 'END_GAME' | 'SETTINGS';
@@ -11,17 +12,23 @@ const GameManager: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<GameScreen>('START_MENU');
   const [gameMode, setGameMode] = useState<GameMode>('solo');
   const [multiplayerData, setMultiplayerData] = useState<{ roomId: string; playerId: string } | null>(null);
+  const [selectedFighters, setSelectedFighters] = useState<{ player1: string; player2: string } | null>(null);
 
   const handlePlaySolo = () => {
     setGameMode('solo');
-    // Show loading screen while models load
-    setCurrentScreen('LOADING');
+    // Go directly to fighter selection
+    setCurrentScreen('FIGHTER_SELECTION');
   };
 
   const handleLoadingComplete = () => {
     // After loading, go to combat
-    // Later we'll add: setCurrentScreen('FIGHTER_SELECTION');
     setCurrentScreen('COMBAT');
+  };
+
+  const handleFighterSelection = (player1FighterId: string, player2FighterId: string) => {
+    setSelectedFighters({ player1: player1FighterId, player2: player2FighterId });
+    // Show loading screen while models load
+    setCurrentScreen('LOADING');
   };
 
   const handlePlayOnline = () => {
@@ -31,8 +38,8 @@ const GameManager: React.FC = () => {
 
   const handleStartMultiplayerGame = (roomId: string, playerId: string) => {
     setMultiplayerData({ roomId, playerId });
-    // Go to loading screen first, then combat
-    setCurrentScreen('LOADING');
+    // Go to fighter selection first in multiplayer too
+    setCurrentScreen('FIGHTER_SELECTION');
   };
 
   const handleSettings = () => {
@@ -63,6 +70,14 @@ const GameManager: React.FC = () => {
         />
       )}
 
+      {currentScreen === 'FIGHTER_SELECTION' && (
+        <FighterSelection
+          onSelectionComplete={handleFighterSelection}
+          onBack={handleReturnToMenu}
+          gameMode={gameMode}
+        />
+      )}
+
       {currentScreen === 'LOADING' && (
         <LoadingScreen onLoadingComplete={handleLoadingComplete} />
       )}
@@ -72,11 +87,11 @@ const GameManager: React.FC = () => {
           onReturnToMenu={handleReturnToMenu}
           gameMode={gameMode}
           multiplayerData={multiplayerData}
+          selectedFighters={selectedFighters}
         />
       )}
 
       {/* Future screens */}
-      {/* {currentScreen === 'FIGHTER_SELECTION' && <FighterSelection />} */}
       {/* {currentScreen === 'END_GAME' && <EndGameScreen />} */}
       {/* {currentScreen === 'SETTINGS' && <SettingsScreen />} */}
     </>

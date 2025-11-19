@@ -42,6 +42,17 @@ const FighterFBXAnimated: React.FC<Props> = ({
    * 1. LOAD BASE MODEL (One time, never swapped)
    * ---------------------------------------------------------- */
   const base = useFBX(`${basePath}_base.fbx`);
+  
+  // Debug: Check if Steve's base loaded
+  useEffect(() => {
+    if (fighter.id === 'fighter4') {
+      console.log('🔧 Steve base object:', base ? 'LOADED' : 'NOT LOADED');
+      if (base) {
+        console.log('🔧 Steve base type:', base.type);
+        console.log('🔧 Steve base children:', base.children.length);
+      }
+    }
+  }, [base, fighter.id]);
 
   /** ----------------------------------------------------------
    * 2. LOAD ALL ANIMATION CLIPS
@@ -167,7 +178,16 @@ const FighterFBXAnimated: React.FC<Props> = ({
    * 7. Height Fix (only once, based on BASE mesh)
    * ---------------------------------------------------------- */
   useEffect(() => {
-    if (!base) return;
+    if (!base) {
+      if (fighter.id === 'fighter4') {
+        console.log('⚠️ Steve base model not loaded yet');
+      }
+      return;
+    }
+
+    if (fighter.id === 'fighter4') {
+      console.log('✅ Steve base model loaded successfully');
+    }
 
     base.scale.set(scale, scale, scale);
 
@@ -196,11 +216,21 @@ const FighterFBXAnimated: React.FC<Props> = ({
     const box = new THREE.Box3().setFromObject(mesh);
     const minY = box.min.y;
     
+    // Debug for Steve
+    if (fighter.id === 'fighter4') {
+      console.log('🔧 Steve bounding box:', {
+        min: box.min,
+        max: box.max,
+        minY: minY,
+        calculatedOffset: -minY
+      });
+    }
+    
     // Always use minY to ensure feet are on the ground (Y=0)
     const offset = -minY;
     setYOffset(offset);
 
-  }, [base, scale, fighter.name]);
+  }, [base, scale, fighter.name, fighter.id]);
 
 
 
@@ -234,8 +264,15 @@ const FighterFBXAnimated: React.FC<Props> = ({
   // Safety check
   if (!base) return null;
 
-  // Position adjustment - Ninja needs to be slightly higher than Ortiz
-  const groundOffset = fighter.id === 'fighter2' ? -0.4 : -0.8; // fighter2 = Ninja
+  // Position adjustment per fighter - alle fighters op -0.4
+  let groundOffset = -0.4; // Ninja
+  if (fighter.id === 'fighter2') {
+    groundOffset = -0.4; // Ortiz
+  } else if (fighter.id === 'fighter3') {
+    groundOffset = -0.4; // Boss
+  } else if (fighter.id === 'fighter4') {
+    groundOffset = -0.4; // Steve
+  }
 
   return (
     <group position={[fighter.position.x, fighter.position.y + groundOffset, fighter.position.z]}>
@@ -287,7 +324,7 @@ const FighterFBXAnimated: React.FC<Props> = ({
       {/* BASE MODEL */}
       <group
         ref={groupRef}
-        position={[0, yOffset, 0]}
+        position={[0, (fighter.id === 'fighter3' || fighter.id === 'fighter4') ? 0 : yOffset, 0]}
         onPointerOver={() => hoverFighter(fighter.id)}
         onPointerOut={() => hoverFighter(null)}
       >
@@ -296,7 +333,7 @@ const FighterFBXAnimated: React.FC<Props> = ({
 
       {/* NAME */}
       <Text
-        position={[0, yOffset + 9.0, 0]}
+        position={[0, (fighter.id === 'fighter3' || fighter.id === 'fighter4') ? 9.0 : yOffset + 9.0, 0]}
         fontSize={0.5}
         color="#000"
         outlineWidth={0.02}
@@ -308,7 +345,7 @@ const FighterFBXAnimated: React.FC<Props> = ({
       </Text>
 
       {/* HEALTH BAR */}
-      <group position={[0, yOffset + 8.5, 0]}>
+      <group position={[0, (fighter.id === 'fighter3' || fighter.id === 'fighter4') ? 8.5 : yOffset + 8.5, 0]}>
         <Box args={[3, 0.2, 0.08]}>
           <meshBasicMaterial color="#333" />
         </Box>
@@ -330,7 +367,7 @@ const FighterFBXAnimated: React.FC<Props> = ({
       
       {/* HEALTH TEXT */}
       <Text
-        position={[0, yOffset + 8.2, 0]}
+        position={[0, (fighter.id === 'fighter3' || fighter.id === 'fighter4') ? 8.2 : yOffset + 8.2, 0]}
         fontSize={0.3}
         color="#fff"
         outlineWidth={0.02}
